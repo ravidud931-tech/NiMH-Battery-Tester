@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08111f">
+  <title>NiMH Battery Tester | Smart Battery Diagnostics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <a class="brand" href="#"><span class="brand-icon">🔋</span><span><b>NiMH<span> TESTER</span></b><small>SMART BATTERY DIAGNOSTICS</small></span></a>
+    <div class="side-caption">MONITORING</div>
+    <a class="side-link selected" href="#overview"><span>▦</span> Overview</a>
+    <a class="side-link" href="#live-data"><span>⌁</span> Live parameters</a>
+    <a class="side-link" href="#analytics"><span>▥</span> Performance analytics</a>
+    <a class="side-link" href="#pulse-monitor"><span>◉</span> Discharge counter</a>
+    <div class="side-bottom">
+      <div class="hardware-card"><div class="hardware-icon">⌘</div><div><b>Controller online</b><small>ESP32-S3 · INA219 · LTC4150</small></div></div>
+      <p>SECOND-LIFE BATTERY PROJECT<br>MONITORING CONSOLE · V1.2</p>
+    </div>
+  </aside>
+
+  <main class="main" id="overview">
+    <header class="topbar">
+      <div><div class="eyebrow">SMART DIAGNOSTICS / REAL-TIME TELEMETRY</div><h1>NiMH BATTERY TESTER</h1><p>Professional live monitoring, capacity tracking and low-voltage protection for NiMH battery packs.</p></div>
+      <div class="top-tools">
+        <div class="connection" id="connectionPill"><i></i><span id="connection">Connecting...</span></div>
+        <div class="last-update">LAST UPDATE <b id="updated">Waiting for data</b></div>
+        <button class="refresh-btn" id="refresh" title="Refresh now">↻</button>
+      </div>
+    </header>
+
+    <section class="status-banner disconnected" id="batteryBanner">
+      <div class="status-symbol">ϟ</div><div class="status-copy"><b id="batteryStatus">BATTERY DISCONNECTED</b><span id="batteryMessage">Waiting for ESP32-S3 data from Firebase</span></div>
+      <div class="status-pins"><span>DIRECTION D <b id="dStatus">0</b></span><span>DIRECTION C <b id="cStatus">0</b></span></div>
+      <div class="status-indicator"><i></i><span id="statusText">No battery detected</span></div>
+    </section>
+
+    <section class="section-block" id="live-data">
+      <div class="section-heading"><div><span class="kicker">LIVE TELEMETRY</span><h2>Battery parameters</h2></div><span class="refresh-note"><i></i> Auto refresh · 2 seconds</span></div>
+      <div class="metric-grid">
+        <article class="metric-card"><div class="metric-label">Battery voltage <span class="metric-icon cyan">🔋</span></div><div class="metric-number"><b id="voltage">--</b><small>V</small></div><div class="metric-foot">INA219 voltage measurement</div></article>
+        <article class="metric-card"><div class="metric-label">Battery current <span class="metric-icon violet">⚡</span></div><div class="metric-number"><b id="current">--</b><small>A</small></div><div class="metric-foot">Measured current</div></article>
+        <article class="metric-card"><div class="metric-label">Power <span class="metric-icon amber">💡</span></div><div class="metric-number"><b id="power">--</b><small>W</small></div><div class="metric-foot">Calculated electrical power</div></article>
+        <article class="metric-card highlight"><div class="metric-label">State of charge <span class="metric-icon green">🎯</span></div><div class="metric-number"><b id="soc">--</b><small>%</small></div><div class="mini-progress"><span id="socBar"></span></div><div class="metric-foot">LTC4150 coulomb counting</div></article>
+        <article class="metric-card"><div class="metric-label">Remaining capacity <span class="metric-icon green">🪫</span></div><div class="metric-number"><b id="remaining">--</b><small>mAh</small></div><div class="metric-foot">Available battery capacity</div></article>
+        <article class="metric-card"><div class="metric-label">Discharged capacity <span class="metric-icon amber">📉</span></div><div class="metric-number"><b id="discharged">--</b><small>mAh</small></div><div class="metric-foot">Capacity used in this session</div></article>
+      </div>
+    </section>
+
+
+    <section class="section-block relay-section" id="relay-protection">
+      <div class="section-heading">
+        <div><span class="kicker">LOAD SAFETY SYSTEM</span><h2>Relay &amp; low-voltage protection</h2>
+          <p>Live status from the ESP32-S3 relay control system.</p>
+        </div>
+        <span class="relay-live-tag"><i></i> LIVE PROTECTION</span>
+      </div>
+      <div class="relay-grid">
+        <article class="relay-card" id="relayCard">
+          <div class="relay-card-top"><span class="relay-icon">⏻</span><span class="relay-state-pill" id="relayStatePill">WAITING</span></div>
+          <div class="relay-card-label">Relay output</div>
+          <div class="relay-main-value" id="relayStatus">--</div>
+          <p id="relayDescription">Waiting for relay data from ESP32-S3.</p>
+        </article>
+        <article class="relay-card" id="loadCard">
+          <div class="relay-card-top"><span class="relay-icon">ϟ</span><span class="relay-state-pill" id="loadStatePill">WAITING</span></div>
+          <div class="relay-card-label">Battery load</div>
+          <div class="relay-main-value" id="loadStatus">--</div>
+          <p id="loadDescription">Load connection status.</p>
+        </article>
+        <article class="relay-card protection-card" id="protectionCard">
+          <div class="relay-card-top"><span class="relay-icon">♢</span><span class="relay-state-pill" id="protectionStatePill">WAITING</span></div>
+          <div class="relay-card-label">Low-voltage protection</div>
+          <div class="relay-main-value" id="protectionStatus">--</div>
+          <p id="protectionDescription">Automatic battery protection status.</p>
+        </article>
+        <article class="relay-card cutoff-card">
+          <div class="relay-card-top"><span class="relay-icon">⌁</span><span class="relay-state-pill neutral-pill">CONFIGURED LIMIT</span></div>
+          <div class="relay-card-label">Cut-off voltage</div>
+          <div class="relay-main-value">6.00 <small>V</small></div>
+          <p>Target low-voltage limit for this tester. Match this value in ESP32-S3 firmware.</p>
+        </article>
+      </div>
+      <div class="relay-note" id="relayNote"><span class="relay-note-icon">i</span><span>Protection status will appear when live Firebase data is received.</span></div>
+    </section>
+
+    <section class="section-block pulse-panel" id="pulse-monitor">
+      <div class="section-heading"><div><span class="kicker">BATTERY USAGE TRACKING</span><h2>Discharge &amp; cycle information</h2></div><span class="chip">LIVE COUNTERS</span></div>
+      <div class="pulse-grid">
+        <div class="pulse-item"><span class="pulse-icon discharge">📉</span><div><small>Discharge pulse count</small><b id="dischargePulses">0</b></div></div>
+        <div class="pulse-item"><span class="pulse-icon neutral">⌁</span><div><small>Total discharged</small><b id="totalDischarged">-- <em>mAh</em></b></div></div>
+        <div class="pulse-item"><span class="pulse-icon neutral">🔄</span><div><small>Battery cycle count</small><b id="cycleCount">--</b><em>cycles</em></div></div>
+      </div>
+    </section>
+
+    <section class="section-block" id="analytics">
+      <div class="section-heading analytics-heading"><div><span class="kicker">BATTERY PERFORMANCE</span><h2>Live performance analytics</h2><p>Historical trends captured from your ESP32-S3 Firebase data stream.</p></div>
+        <div class="graph-actions"><button class="btn secondary" id="clearHistory">Clear history</button><button class="btn primary" id="downloadAll">⇩ Download all graphs</button></div>
+      </div>
+      <div class="charts-grid">
+        <article class="chart-card chart-wide"><div class="chart-head"><div><h3>Voltage &amp; Current vs Time</h3><p>Combined trend · independent Y-axes</p></div><button class="download-chart" data-chart="vc" title="Download graph">⇩ PNG</button></div><div class="canvas-wrap"><canvas id="vc"></canvas></div></article>
+        <article class="chart-card"><div class="chart-head"><div><h3>Voltage vs Time</h3><p>Battery voltage · V</p></div><button class="download-chart" data-chart="v" title="Download graph">⇩ PNG</button></div><div class="canvas-wrap"><canvas id="v"></canvas></div></article>
+        <article class="chart-card"><div class="chart-head"><div><h3>Current vs Time</h3><p>Battery current · A</p></div><button class="download-chart" data-chart="i" title="Download graph">⇩ PNG</button></div><div class="canvas-wrap"><canvas id="i"></canvas></div></article>
+        <article class="chart-card"><div class="chart-head"><div><h3>State of Charge vs Time</h3><p>Battery SOC · %</p></div><button class="download-chart" data-chart="s" title="Download graph">⇩ PNG</button></div><div class="canvas-wrap"><canvas id="s"></canvas></div></article>
+        <article class="chart-card"><div class="chart-head"><div><h3>Remaining Capacity vs Time</h3><p>Available capacity · mAh</p></div><button class="download-chart" data-chart="r" title="Download graph">⇩ PNG</button></div><div class="canvas-wrap"><canvas id="r"></canvas></div></article>
+        <article class="chart-card chart-wide"><div class="chart-head"><div><h3>SOC vs Remaining Capacity</h3><p>Relationship between state of charge and available capacity</p></div><button class="download-chart" data-chart="sr" title="Download graph">⇩ PNG</button></div><div class="canvas-wrap scatter-wrap"><canvas id="sr"></canvas></div></article>
+      </div>
+      <div class="history-footer"><span><i></i> <b id="pointCount">0</b> data points stored in this browser session</span><button class="btn secondary" id="downloadCSV">⇩ Export readings CSV</button></div>
+    </section>
+    <footer>NiMH BATTERY TESTER <span>·</span> ESP32-S3 / INA219 / LTC4150 <span>·</span> Firebase path: /BMS/live.json</footer>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>
